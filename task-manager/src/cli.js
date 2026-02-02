@@ -11,6 +11,7 @@ import { exportCommand } from './commands/export.js';
 import { statsCommand } from './commands/stats.js';
 import { configCommand } from './commands/config.js';
 import { syncCommand } from './commands/sync.js';
+import { importCommand } from './commands/import.js';
 import { getCurrentKw, getCurrentYear, formatKwString } from './utils/kw.js';
 
 const program = new Command();
@@ -146,6 +147,17 @@ program
   .option('--all', 'Inkl. archivierte Tasks')
   .action(syncCommand);
 
+// Import command
+program
+  .command('import')
+  .description('Tasks aus Datei oder Text importieren')
+  .option('-f, --file <pfad>', 'Datei importieren (JSON, TXT, MD)')
+  .option('-t, --text <text>', 'Text direkt importieren (Semikolon-getrennt)')
+  .option('-k, --kw <nummer>', 'Standard-KW für importierte Tasks')
+  .option('-y, --year <jahr>', 'Jahr für importierte Tasks')
+  .option('-s, --status <status>', 'Standard-Status für importierte Tasks')
+  .action(importCommand);
+
 // Show current KW info on help
 program.addHelpText('after', `
 ${chalk.bold('Aktuelle KW:')} ${formatKwString(getCurrentKw(), getCurrentYear())}
@@ -162,6 +174,8 @@ ${chalk.bold('Beispiele:')}
   $ task config --detect
   $ task config --sync ~/Obsidian/MeinVault
   $ task sync --obsidian
+  $ task import --file alte-tasks.txt --kw 1
+  $ task import --text "Task1; Task2; Task3" --kw 5
 
 ${chalk.bold('Statusfarben:')}
   🟢 green  - Erledigt
