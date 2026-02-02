@@ -12,6 +12,7 @@ import { statsCommand } from './commands/stats.js';
 import { configCommand } from './commands/config.js';
 import { syncCommand } from './commands/sync.js';
 import { importCommand } from './commands/import.js';
+import { pushCommand, pullCommand } from './commands/git.js';
 import { getCurrentKw, getCurrentYear, formatKwString } from './utils/kw.js';
 
 const program = new Command();
@@ -158,6 +159,21 @@ program
   .option('-s, --status <status>', 'Standard-Status für importierte Tasks')
   .action(importCommand);
 
+// Push command (git)
+program
+  .command('push')
+  .description('Tasks zu Git pushen (für Sync zwischen Computern)')
+  .option('-m, --message <text>', 'Commit-Nachricht')
+  .option('-f, --force', 'Auch ohne Änderungen pushen')
+  .action(pushCommand);
+
+// Pull command (git)
+program
+  .command('pull')
+  .description('Neueste Tasks von Git holen')
+  .option('-f, --force', 'Lokale Änderungen überschreiben')
+  .action(pullCommand);
+
 // Show current KW info on help
 program.addHelpText('after', `
 ${chalk.bold('Aktuelle KW:')} ${formatKwString(getCurrentKw(), getCurrentYear())}
@@ -176,6 +192,8 @@ ${chalk.bold('Beispiele:')}
   $ task sync --obsidian
   $ task import --file alte-tasks.txt --kw 1
   $ task import --text "Task1; Task2; Task3" --kw 5
+  $ task push                    # Tasks zu Git pushen
+  $ task pull                    # Tasks von Git holen
 
 ${chalk.bold('Statusfarben:')}
   🟢 green  - Erledigt
