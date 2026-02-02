@@ -1,0 +1,30 @@
+{
+  "name": "task-manager",
+  "version": "1.0.0",
+  "description": "CLI-basierter Task-Manager mit KW-Archivierung, Statusfarben und Export-Funktionen",
+  "main": "src/cli.js",
+  "type": "module",
+  "bin": {
+    "task": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "task-manager",
+    "cli",
+    "calendar-week",
+    "productivity"
+  ],
+  "author": "Adrian",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3",
+    "commander": "^12.0.0",
+    "date-fns": "^3.3.1",
+    "docx": "^8.5.0",
+    "uuid": "^9.0.1"
+  }
+}

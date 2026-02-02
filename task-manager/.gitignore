@@ -1,0 +1,7 @@
+node_modules/
+data/tasks.json
+exports/*.md
+exports/*.docx
+exports/*.json
+*.log
+.DS_Store
