@@ -1,7 +1,7 @@
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
-import { EXPORTS_DIR, STATUS, PRIORITY } from '../config.js';
+import { getExportsDir, STATUS, PRIORITY } from '../config.js';
 import { formatKwString, getKwDateRange } from './kw.js';
 
 /**
@@ -205,7 +205,7 @@ export function exportToJson(tasks, options = {}) {
  */
 export async function saveExport(content, filename, format) {
   const ext = format === 'docx' ? 'docx' : format === 'json' ? 'json' : 'md';
-  const fullPath = join(EXPORTS_DIR, `${filename}.${ext}`);
+  const fullPath = join(getExportsDir(), `${filename}.${ext}`);
 
   if (format === 'docx') {
     writeFileSync(fullPath, content);

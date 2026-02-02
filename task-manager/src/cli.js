@@ -9,6 +9,8 @@ import { deleteCommand } from './commands/delete.js';
 import { archiveCommand } from './commands/archive.js';
 import { exportCommand } from './commands/export.js';
 import { statsCommand } from './commands/stats.js';
+import { configCommand } from './commands/config.js';
+import { syncCommand } from './commands/sync.js';
 import { getCurrentKw, getCurrentYear, formatKwString } from './utils/kw.js';
 
 const program = new Command();
@@ -126,6 +128,24 @@ program
   .option('-y, --year <jahr>', 'Jahr')
   .action(statsCommand);
 
+// Config command
+program
+  .command('config')
+  .description('Konfiguration anzeigen und ändern')
+  .option('--show', 'Aktuelle Konfiguration anzeigen')
+  .option('--sync <pfad>', 'Sync-Pfad setzen (Obsidian Vault oder Google Drive)')
+  .option('--detect', 'Sync-Ordner automatisch erkennen')
+  .option('--reset', 'Konfiguration zurücksetzen')
+  .action(configCommand);
+
+// Sync command
+program
+  .command('sync')
+  .description('Tasks zu Obsidian/Cloud synchronisieren')
+  .option('--obsidian', 'Als Obsidian-Markdown exportieren')
+  .option('--all', 'Inkl. archivierte Tasks')
+  .action(syncCommand);
+
 // Show current KW info on help
 program.addHelpText('after', `
 ${chalk.bold('Aktuelle KW:')} ${formatKwString(getCurrentKw(), getCurrentYear())}
@@ -139,6 +159,9 @@ ${chalk.bold('Beispiele:')}
   $ task archive --kw 5
   $ task export --format md --kw 6
   $ task stats
+  $ task config --detect
+  $ task config --sync ~/Obsidian/MeinVault
+  $ task sync --obsidian
 
 ${chalk.bold('Statusfarben:')}
   🟢 green  - Erledigt

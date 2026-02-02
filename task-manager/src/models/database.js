@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { DB_FILE, DEFAULT_CONFIG } from '../config.js';
+import { getDbFile, DEFAULT_CONFIG } from '../config.js';
 
 // Initial database structure
 const INITIAL_DB = {
@@ -13,13 +13,15 @@ const INITIAL_DB = {
  * @returns {Object} Database object
  */
 export function loadDatabase() {
-  if (!existsSync(DB_FILE)) {
+  const dbFile = getDbFile();
+
+  if (!existsSync(dbFile)) {
     saveDatabase(INITIAL_DB);
     return INITIAL_DB;
   }
 
   try {
-    const data = readFileSync(DB_FILE, 'utf-8');
+    const data = readFileSync(dbFile, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     console.error('Fehler beim Laden der Datenbank:', error.message);
@@ -32,8 +34,10 @@ export function loadDatabase() {
  * @param {Object} db - Database object to save
  */
 export function saveDatabase(db) {
+  const dbFile = getDbFile();
+
   try {
-    writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+    writeFileSync(dbFile, JSON.stringify(db, null, 2), 'utf-8');
   } catch (error) {
     console.error('Fehler beim Speichern der Datenbank:', error.message);
     throw error;

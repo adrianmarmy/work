@@ -2,6 +2,12 @@
 
 CLI-basierter Task-Manager mit KW-Archivierung, Statusfarben und Export-Funktionen.
 
+**Features:**
+- Task-Verwaltung mit Kalenderwoche (KW), Statusfarben und Prioritäten
+- Obsidian-Integration für Cloud-Sync zwischen mehreren Computern
+- Export zu Markdown, DOCX und JSON
+- Automatische KW-Archivierung
+
 ## Installation
 
 ```bash
@@ -180,6 +186,41 @@ task stats         # Gesamtübersicht
 task stats --kw 6  # Detail-Statistik KW06
 ```
 
+### Konfiguration
+
+```bash
+task config [optionen]
+
+Optionen:
+  --show              Aktuelle Konfiguration anzeigen
+  --sync <pfad>       Sync-Pfad setzen (Obsidian/Google Drive)
+  --detect            Sync-Ordner automatisch erkennen
+  --reset             Konfiguration zurücksetzen
+```
+
+**Beispiele:**
+```bash
+task config                           # Konfiguration anzeigen
+task config --detect                  # Sync-Ordner finden
+task config --sync ~/Obsidian/Vault   # Obsidian Vault setzen
+task config --sync ~/Google\ Drive    # Google Drive setzen
+```
+
+### Sync (Obsidian/Cloud)
+
+```bash
+task sync [optionen]
+
+Optionen:
+  --obsidian    Als Obsidian-Markdown exportieren
+  --all         Inkl. archivierte Tasks
+```
+
+**Beispiele:**
+```bash
+task sync --obsidian    # Zu Obsidian synchronisieren
+```
+
 ## Statusfarben
 
 | Farbe   | Emoji | Bedeutung             |
@@ -233,6 +274,50 @@ Tasks werden in `data/tasks.json` gespeichert:
 }
 ```
 
+## Cloud-Sync (Obsidian / Google Drive)
+
+Der Task Manager unterstützt Synchronisation zwischen mehreren Computern über Obsidian oder Google Drive.
+
+### Einrichtung
+
+1. **Sync-Ordner erkennen:**
+   ```bash
+   task config --detect
+   ```
+
+2. **Sync-Pfad setzen:**
+   ```bash
+   # Für Obsidian Vault:
+   task config --sync ~/Obsidian/MeinVault
+
+   # Für Google Drive:
+   task config --sync ~/Google\ Drive/Tasks
+   ```
+
+3. **Zu Obsidian synchronisieren:**
+   ```bash
+   task sync --obsidian
+   ```
+
+### Obsidian-Integration
+
+Nach dem Sync findest du in deinem Vault:
+- `tasks/Dashboard.md` - Übersicht der aktuellen Woche
+- `tasks/Tasks-Index.md` - Index aller Kalenderwochen
+- `tasks/kalenderwochen/KW06-2026.md` - Details pro KW
+
+Die Markdown-Dateien nutzen:
+- YAML Frontmatter für Tags und Metadaten
+- Obsidian-Checkboxen für Tasks
+- Wikilinks für Navigation
+
+### Multi-Computer Setup
+
+1. Installiere das Tool auf beiden Computern
+2. Nutze den gleichen Sync-Ordner (Obsidian/Google Drive)
+3. Führe `task config --sync <pfad>` auf beiden aus
+4. Die `tasks.json` wird automatisch synchronisiert
+
 ## Workflow-Beispiel
 
 ```bash
@@ -247,6 +332,9 @@ task archive --kw 5
 
 # Wochenbericht erstellen
 task export --format md --kw 6 > KW06-report.md
+
+# Zu Obsidian synchronisieren
+task sync --obsidian
 
 # Statistik überprüfen
 task stats
