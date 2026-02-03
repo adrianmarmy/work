@@ -1,5 +1,5 @@
 import { addTask } from '../models/database.js';
-import { createTask, normalizeStatus, isValidPriority, getShortId } from '../models/task.js';
+import { createTask, normalizeStatus, isValidPriority, getShortId, parseDay, isValidDay, DAY_NAMES } from '../models/task.js';
 import { success, error, formatStatus, formatKw } from '../utils/formatting.js';
 import { parseKw, getCurrentKw, getCurrentYear } from '../utils/kw.js';
 
@@ -37,6 +37,17 @@ export function addCommand(description, options) {
     year = parsedYear;
   }
 
+  // Parse and validate day
+  let day = null;
+  if (options.day) {
+    day = parseDay(options.day);
+    if (day === null) {
+      console.log(error(`Ungültiger Tag: ${options.day}`));
+      console.log('Gültige Werte: 1-7, Mo-So, Montag-Sonntag, heute, morgen');
+      process.exit(1);
+    }
+  }
+
   // Parse and validate status/color
   let status = 'yellow';
   if (options.color || options.status) {
@@ -72,6 +83,7 @@ export function addCommand(description, options) {
     description: description.trim(),
     kw,
     year,
+    day,
     status,
     priority,
     tags,
@@ -84,6 +96,7 @@ export function addCommand(description, options) {
   console.log(success('Task erstellt:'));
   console.log(`  ID:     ${getShortId(task.id)}`);
   console.log(`  KW:     ${formatKw(task.kw, task.year)}`);
+  console.log(`  Tag:    ${DAY_NAMES[task.day]}`);
   console.log(`  Status: ${formatStatus(task.status)}`);
   console.log(`  Prio:   P${task.priority}`);
   console.log(`  Task:   ${task.description}`);

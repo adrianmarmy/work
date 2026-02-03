@@ -1,7 +1,17 @@
+import chalk from 'chalk';
 import { getTasks, getArchivedTasks } from '../models/database.js';
-import { normalizeStatus } from '../models/task.js';
+import { normalizeStatus, parseDay, DAY_NAMES, DAY_NAMES_SHORT } from '../models/task.js';
 import { createTaskTable, createSummaryHeader, info, warning } from '../utils/formatting.js';
 import { parseKw, getCurrentKw, getCurrentYear, formatKwString } from '../utils/kw.js';
+import { getDay } from 'date-fns';
+
+/**
+ * Get current day (1=Monday, 7=Sunday)
+ */
+function getCurrentDay() {
+  const jsDay = getDay(new Date());
+  return jsDay === 0 ? 7 : jsDay;
+}
 
 /**
  * List command handler
@@ -32,24 +42,92 @@ export function listCommand(options) {
     const kw = parseKw(options.kw);
     title += ` - ${formatKwString(kw, options.year || getCurrentYear())}`;
   }
+  if (options.day) {
+    const day = parseDay(options.day);
+    if (day) {
+      title += ` - ${DAY_NAMES[day]}`;
+    }
+  }
   if (options.status) {
     title += ` (${options.status})`;
   }
   if (options.today) {
-    title += ` - Heute (${formatKwString(getCurrentKw())})`;
+    title += ` - Heute (${DAY_NAMES[getCurrentDay()]})`;
   }
 
-  // Output
-  console.log(createSummaryHeader(title, tasks.length));
-  console.log(createTaskTable(tasks, {
-    showNotes: options.notes,
-    showTags: !options.compact
-  }));
+  // Output - grouped by day if viewing a KW
+  if (options.byDay || (options.kw && !options.day && !options.compact)) {
+    showByDay(tasks, title);
+  } else {
+    console.log(createSummaryHeader(title, tasks.length));
+    console.log(createTaskTable(tasks, {
+      showNotes: options.notes,
+      showTags: !options.compact,
+      showDay: true
+    }));
 
-  // Show summary by status
-  if (!options.compact && tasks.length > 0) {
-    showStatusSummary(tasks);
+    // Show summary by status
+    if (!options.compact && tasks.length > 0) {
+      showStatusSummary(tasks);
+    }
   }
+}
+
+/**
+ * Show tasks grouped by day
+ */
+function showByDay(tasks, title) {
+  console.log(chalk.bold(`\n${title} (${tasks.length} Tasks)\n`));
+
+  const currentDay = getCurrentDay();
+
+  // Group by day
+  const byDay = {};
+  for (let d = 1; d <= 7; d++) {
+    byDay[d] = tasks.filter(t => t.day === d);
+  }
+
+  // Also collect tasks without a day
+  const noDay = tasks.filter(t => !t.day);
+
+  // Display each day
+  for (let d = 1; d <= 7; d++) {
+    const dayTasks = byDay[d];
+    const isToday = d === currentDay;
+    const dayLabel = isToday
+      ? chalk.cyan.bold(`📅 ${DAY_NAMES[d]} (heute)`)
+      : chalk.bold(`   ${DAY_NAMES[d]}`);
+
+    if (dayTasks.length > 0) {
+      console.log(dayLabel);
+
+      dayTasks.forEach(task => {
+        const statusEmoji = { green: '🟢', yellow: '🟡', red: '🔴', white: '⚪' }[task.status] || '🟡';
+        const prioMark = task.priority >= 3 ? chalk.red(' ⚡') : '';
+        const statusColor = task.status === 'green' ? chalk.gray : chalk.white;
+
+        console.log(`      ${statusEmoji} ${statusColor(task.description)}${prioMark}`);
+      });
+      console.log('');
+    } else if (isToday) {
+      console.log(dayLabel);
+      console.log(chalk.gray('      (keine Tasks)'));
+      console.log('');
+    }
+  }
+
+  // Show tasks without day
+  if (noDay.length > 0) {
+    console.log(chalk.bold('   Ohne Tag'));
+    noDay.forEach(task => {
+      const statusEmoji = { green: '🟢', yellow: '🟡', red: '🔴', white: '⚪' }[task.status] || '🟡';
+      console.log(`      ${statusEmoji} ${task.description}`);
+    });
+    console.log('');
+  }
+
+  // Summary
+  showStatusSummary(tasks);
 }
 
 /**
@@ -67,11 +145,22 @@ function applyFilters(tasks, options) {
     }
   }
 
-  // Filter by "today" (current KW)
+  // Filter by day
+  if (options.day) {
+    const day = parseDay(options.day);
+    if (day !== null) {
+      filtered = filtered.filter(t => t.day === day);
+    }
+  }
+
+  // Filter by "today" (current KW and current day)
   if (options.today) {
     const currentKw = getCurrentKw();
     const currentYear = getCurrentYear();
-    filtered = filtered.filter(t => t.kw === currentKw && t.year === currentYear);
+    const currentDay = getCurrentDay();
+    filtered = filtered.filter(t =>
+      t.kw === currentKw && t.year === currentYear && t.day === currentDay
+    );
   }
 
   // Filter by status
@@ -120,6 +209,11 @@ function sortTasks(tasks, options) {
     if (a.year !== b.year) return a.year - b.year;
     if (a.kw !== b.kw) return a.kw - b.kw;
 
+    // Then by day (ascending)
+    const dayA = a.day || 8;
+    const dayB = b.day || 8;
+    if (dayA !== dayB) return dayA - dayB;
+
     // Then by priority (descending - high priority first)
     if (b.priority !== a.priority) return b.priority - a.priority;
 
@@ -139,7 +233,7 @@ function sortTasks(tasks, options) {
  */
 function hasFilters(options) {
   return !!(options.kw || options.status || options.priority ||
-            options.tag || options.search || options.today);
+            options.tag || options.search || options.today || options.day);
 }
 
 /**
@@ -153,5 +247,5 @@ function showStatusSummary(tasks) {
     white: tasks.filter(t => t.status === 'white').length
   };
 
-  console.log(`\n🟢 ${counts.green}  🟡 ${counts.yellow}  🔴 ${counts.red}  ⚪ ${counts.white}`);
+  console.log(`🟢 ${counts.green}  🟡 ${counts.yellow}  🔴 ${counts.red}  ⚪ ${counts.white}`);
 }
