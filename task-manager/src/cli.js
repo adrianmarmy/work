@@ -13,6 +13,7 @@ import { configCommand } from './commands/config.js';
 import { syncCommand } from './commands/sync.js';
 import { importCommand } from './commands/import.js';
 import { pushCommand, pullCommand } from './commands/git.js';
+import { clearCommand } from './commands/clear.js';
 import { getCurrentKw, getCurrentYear, formatKwString } from './utils/kw.js';
 
 const program = new Command();
@@ -176,6 +177,20 @@ program
   .description('Neueste Tasks von Git holen')
   .option('-f, --force', 'Lokale Änderungen überschreiben')
   .action(pullCommand);
+
+// Clear command
+program
+  .command('clear')
+  .description('Mehrere Tasks auf einmal löschen')
+  .option('--all', 'Alle Tasks löschen')
+  .option('--no-day', 'Tasks ohne Wochentag löschen')
+  .option('--invalid', 'Ungültige/unvollständige Tasks löschen')
+  .option('-k, --kw <nummer>', 'Tasks einer KW löschen')
+  .option('-d, --day <tag>', 'Tasks eines Tages löschen')
+  .option('-s, --status <status>', 'Tasks mit bestimmtem Status löschen')
+  .option('-y, --year <jahr>', 'Jahr (für --kw)')
+  .option('-f, --force', 'Ohne Bestätigung löschen')
+  .action(clearCommand);
 
 // Show current KW info on help
 program.addHelpText('after', `
